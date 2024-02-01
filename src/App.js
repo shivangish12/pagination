@@ -4,14 +4,24 @@ const TableWithPagination = () => {
   const [members, setMembers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [membersPerPage] = useState(10);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetch(
       "https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json"
     )
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
+        return response.json();
+      })
       .then((data) => setMembers(data))
-      .catch((error) => console.error("Failed to fetch data "));
+      .catch((error) => {
+        console.error("Error fetching data: ", error);
+        setError(error.message);
+        alert("Failed to fetch data. Please try again."); // Display an alert on error
+      });
   }, []);
 
   // Calculate current members to display based on pagination
@@ -24,7 +34,7 @@ const TableWithPagination = () => {
 
   return (
     <div>
-      <h1>Employee Data Table</h1>
+      {error && <p style={{ color: "red" }}>{error}</p>}
       <table>
         <thead>
           <tr>
@@ -56,7 +66,7 @@ const TableWithPagination = () => {
         >
           Previous
         </button>
-        <span style={{ margin: "0 10px" }}>{currentPage}</span>
+        <span style={{ margin: "0 10px" }}>Page {currentPage}</span>
         <button
           onClick={() => paginate(currentPage + 1)}
           disabled={indexOfLastMember >= members.length}
